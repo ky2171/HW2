@@ -1,0 +1,102 @@
+#Homework 2 Question 1
+Retension <- read.csv("/Users/yankeyu/Desktop/Retention.csv")
+str(Retension)
+summary(Retension)
+#1)Retention rate of day 1 and day 2
+Retension_1 <- subset(Retension[Retension$day == 1,])
+Retension_2 <- subset(Retension[Retension$day == 2,])
+Retension_3 <- subset(Retension[Retension$day == 3,])
+
+#Using left merge to find who those leave the app after using (finding NAs)
+Retension_i1 <- merge (Retension_1, Retension_2,
+                       by.x = "user_id",
+                       by.y = "user_id",
+                       all = F,
+                       all.x = T,
+                       all.y = F)
+Retension_i2 <- merge (Retension_2, Retension_3,
+                       by.x = "user_id",
+                       by.y = "user_id",
+                       all = F,
+                       all.x = T,
+                       all.y = F)
+
+RetensionRate_1 <- 1-sum(is.na(Retension_i1$play_duration.y))/nrow(Retension_i1)
+RetensionRate_2 <- 1-sum(is.na(Retension_i2$play_duration.y))/nrow(Retension_i2)
+
+RetensionRate_1
+RetensionRate_2
+#2) Very active and marginally active users
+very_active_user_1 <- subset(Retension_i1, Retension_i1$play_duration.x > 6)
+marginally_active_user_1 <- subset(Retension_i1, Retension_i1$play_duration.x <= 6)
+
+RetensionRate_veryactive_1 <- 1-mean(is.na(very_active_user_1$play_duration.y))
+RetensionRate_marginallyactive_1 <- 1-mean(is.na(marginally_active_user_1$play_duration.y))
+
+RetensionRate_veryactive_1
+RetensionRate_marginallyactive_1
+
+very_active_user_2 <- subset(Retension_i2, Retension_i2$play_duration.x >6)
+marginally_active_user_2 <- subset(Retension_i2, Retension_i2$play_duration.x <= 6)
+
+RetensionRate_veryactive_2 <- 1-mean(is.na(very_active_user_2$play_duration.y))
+RetensionRate_marginallyactive_2 <- 1-mean(is.na(marginally_active_user_2$play_duration.y))
+
+RetensionRate_veryactive_2
+RetensionRate_marginallyactive_2
+
+#winequality
+
+winequality <- read.csv2("/Users/yankeyu/Desktop/winequality-white.csv",sep = ";")
+head (winequality)
+summary(winequality)
+
+#a)Training set and Validation set
+training.rows <- sample(1:nrow(winequality), 3500)
+training.data <- winequality[training.rows,]
+validation.data <- winequality[-training.rows,]
+
+write.csv(training.data, "/Users/yankeyu/Desktop/training_wine.csv")
+write.csv(validation.data, "/Users/yankeyu/Desktop/validation_wine.csv")
+
+#b)
+model_wine <- lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+residual.sugar+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+density+pH+sulphates+alcohol, data=training.data)
+#R^2 for training set
+SSE=sum(model_wine$residuals ^2)
+SSE
+SST=sum((training.data$quality-mean(training.data$quality))^2)
+SST
+1-SSE/SST
+
+#R^2 for validation set
+quality_predict <- predict(model_wine, newdata = validation.data)
+OoS_SSE = sum((quality_predict-validation.data$quality)^2)
+OoS_SSE
+
+OoS_SST = sum((mean(training.data$quality)-validation.data$quality)^2)
+OoS_SST
+
+1 - OoS_SSE/OoS_SST
+
+
+#c)
+model1 <-  lm(quality ~ volatile.acidity+citric.acid+residual.sugar+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+density+pH+sulphates+alcohol, data=training.data)
+model2 <-  lm(quality ~ fixed.acidity+citric.acid+residual.sugar+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+density+pH+sulphates+alcohol, data=training.data)
+model3 <-  lm(quality ~ fixed.acidity+volatile.acidity+residual.sugar+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+density+pH+sulphates+alcohol, data=training.data)
+model4 <-  lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+density+pH+sulphates+alcohol, data=training.data)
+model5 <-  lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+residual.sugar+free.sulfur.dioxide+total.sulfur.dioxide+density+pH+sulphates+alcohol, data=training.data)
+model6 <-  lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+residual.sugar+chlorides+total.sulfur.dioxide+density+pH+sulphates+alcohol, data=training.data)
+model7 <-  lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+residual.sugar+chlorides+free.sulfur.dioxide+density+pH+sulphates+alcohol, data=training.data)
+model8 <-  lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+residual.sugar+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+pH+sulphates+alcohol, data=training.data)
+model9 <-  lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+residual.sugar+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+density+sulphates+alcohol, data=training.data)
+model10 <- lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+residual.sugar+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+density+pH+alcohol, data=training.data)
+model11 <- lm(quality ~ fixed.acidity+volatile.acidity+citric.acid+residual.sugar+chlorides+free.sulfur.dioxide+total.sulfur.dioxide+density+pH+sulphates, data=training.data)
+
+wine_list = list(model1,model2,model3,model4,model5,model6,model7,model8,model9,model10,model11)
+
+for (val in wine_list) {
+  SSE = sum(val$residuals^2)
+  SST = sum((training.data$quality-mean(training.data$quality))^2)
+  result <- 1-SSE/SST  
+  print(result)
+}
